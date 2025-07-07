@@ -1,0 +1,16 @@
+{
+  "total_calls": 2,
+  "call_history": [
+    {
+      "timestamp": "2025-07-04T18:30:37.813866",
+      "function": "generate_paper",
+      "call_number": 1
+    },
+    {
+      "timestamp": "2025-07-04T18:30:48.896875",
+      "function": "generate_pdf",
+      "call_number": 2
+    }
+  ],
+  "last_updated": "2025-07-04T18:30:48.896891"
+}
