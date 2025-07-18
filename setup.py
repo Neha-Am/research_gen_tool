@@ -9,7 +9,7 @@ from pathlib import Path
 
 def create_env_file():
     """Create .env file if it doesn't exist"""
-    env_file = Path('.env')
+    env_file = Path('../../Desktop/Flaskkk-resgen-finalversion/.env')
     
     if env_file.exists():
         print("📄 .env file already exists")

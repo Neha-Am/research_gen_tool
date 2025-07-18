@@ -45,7 +45,7 @@ class Config:
     ESTIMATED_OUTPUT_TOKENS_PER_CALL = 1000
     
     # API Tracking Configuration
-    TRACKER_FILE = 'api_call_tracker.json'
+    TRACKER_FILE = '../../Desktop/Flaskkk-resgen-finalversion/api_call_tracker.json'
     MAX_CALL_HISTORY = 100  # Keep last 100 calls in history
     
     # Validation Configuration

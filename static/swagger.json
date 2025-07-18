@@ -1,0 +1,585 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "IEEE Conference Paper Generator API",
+    "description": "A comprehensive API for generating IEEE conference papers using AI. This API provides endpoints for paper generation, PDF upload and analysis, PDF generation, and API statistics.",
+    "version": "1.0.0",
+    "contact": {
+      "name": "API Support",
+      "email": "support@ieee-paper-generator.com"
+    },
+    "license": {
+      "name": "MIT",
+      "url": "https://opensource.org/licenses/MIT"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:5001",
+      "description": "Development server"
+    },
+    {
+      "url": "https://api.ieee-paper-generator.com",
+      "description": "Production server"
+    }
+  ],
+  "paths": {
+    "/health": {
+      "get": {
+        "summary": "Health Check",
+        "description": "Check if the API is running and healthy",
+        "tags": ["System"],
+        "responses": {
+          "200": {
+            "description": "API is healthy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "healthy"
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time",
+                      "example": "2024-01-15T10:30:00Z"
+                    },
+                    "version": {
+                      "type": "string",
+                      "example": "1.0.0"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/generate-paper": {
+      "post": {
+        "summary": "Generate IEEE Conference Paper",
+        "description": "Generate a complete IEEE conference paper based on provided research details using AI",
+        "tags": ["Paper Generation"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["title", "research_field", "methodology", "expected_results"],
+                "properties": {
+                  "title": {
+                    "type": "string",
+                    "description": "The title of the research paper",
+                    "example": "Machine Learning Approaches for Climate Change Prediction"
+                  },
+                  "research_field": {
+                    "type": "string",
+                    "description": "The field of research (e.g., Computer Science, Engineering, etc.)",
+                    "example": "Computer Science - Machine Learning"
+                  },
+                  "methodology": {
+                    "type": "string",
+                    "description": "Research methodology and approach",
+                    "example": "Deep learning with convolutional neural networks and LSTM models"
+                  },
+                  "expected_results": {
+                    "type": "string",
+                    "description": "Expected outcomes and results of the research",
+                    "example": "Improved accuracy in climate prediction models by 15%"
+                  },
+                  "additional_context": {
+                    "type": "string",
+                    "description": "Additional context or requirements for the paper",
+                    "example": "Focus on recent developments in the field"
+                  },
+                  "custom_parameters": {
+                    "type": "object",
+                    "description": "Custom parameters for paper generation",
+                    "additionalProperties": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Paper generated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "content": {
+                      "type": "string",
+                      "description": "Generated paper content"
+                    },
+                    "sections": {
+                      "type": "object",
+                      "description": "Parsed content sections",
+                      "properties": {
+                        "title": {"type": "string"},
+                        "abstract": {"type": "string"},
+                        "introduction": {"type": "string"},
+                        "methodology": {"type": "string"},
+                        "results": {"type": "string"},
+                        "conclusion": {"type": "string"},
+                        "references": {"type": "string"}
+                      }
+                    },
+                    "word_count": {
+                      "type": "integer",
+                      "example": 2500
+                    },
+                    "character_count": {
+                      "type": "integer",
+                      "example": 15000
+                    },
+                    "generated_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {"type": "string"},
+                    "errors": {"type": "array", "items": {"type": "string"}},
+                    "warnings": {"type": "array", "items": {"type": "string"}}
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {"type": "string"}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/upload-pdf": {
+      "post": {
+        "summary": "Upload and Analyze PDF",
+        "description": "Upload a PDF file and extract/analyze its content",
+        "tags": ["PDF Processing"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "PDF file to upload and analyze"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "PDF analyzed successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "extracted_text": {
+                      "type": "string",
+                      "description": "Extracted text from PDF (truncated if too long)"
+                    },
+                    "analysis": {
+                      "type": "object",
+                      "description": "Analysis results of the PDF content"
+                    },
+                    "text_length": {
+                      "type": "integer",
+                      "example": 5000
+                    },
+                    "uploaded_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - invalid file or no file provided",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {"type": "string"}
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {"type": "string"}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/generate-pdf": {
+      "post": {
+        "summary": "Generate PDF from Content",
+        "description": "Generate a PDF file from provided content sections",
+        "tags": ["PDF Generation"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["sections"],
+                "properties": {
+                  "sections": {
+                    "type": "object",
+                    "description": "Content sections for the PDF",
+                    "properties": {
+                      "title": {"type": "string"},
+                      "abstract": {"type": "string"},
+                      "introduction": {"type": "string"},
+                      "methodology": {"type": "string"},
+                      "results": {"type": "string"},
+                      "conclusion": {"type": "string"},
+                      "references": {"type": "string"}
+                    }
+                  },
+                  "author_info": {
+                    "type": "object",
+                    "description": "Author information for the PDF",
+                    "properties": {
+                      "name": {"type": "string"},
+                      "email": {"type": "string"},
+                      "affiliation": {"type": "string"},
+                      "department": {"type": "string"}
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "PDF generated successfully",
+            "content": {
+              "application/pdf": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - missing content sections",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {"type": "string"}
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {"type": "string"}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/stats": {
+      "get": {
+        "summary": "Get API Statistics",
+        "description": "Retrieve API usage statistics and metrics",
+        "tags": ["Statistics"],
+        "responses": {
+          "200": {
+            "description": "Statistics retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "total_calls": {
+                      "type": "integer",
+                      "example": 150
+                    },
+                    "calls_by_endpoint": {
+                      "type": "object",
+                      "properties": {
+                        "generate_paper": {"type": "integer"},
+                        "upload_pdf": {"type": "integer"},
+                        "generate_pdf": {"type": "integer"},
+                        "validate_inputs": {"type": "integer"}
+                      }
+                    },
+                    "last_reset": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {"type": "string"}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/reset-stats": {
+      "post": {
+        "summary": "Reset API Statistics",
+        "description": "Reset all API usage statistics to zero",
+        "tags": ["Statistics"],
+        "responses": {
+          "200": {
+            "description": "Statistics reset successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Statistics reset successfully"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {"type": "string"}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/validate-inputs": {
+      "post": {
+        "summary": "Validate Paper Inputs",
+        "description": "Validate paper generation inputs before processing",
+        "tags": ["Validation"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["title", "research_field", "methodology", "expected_results"],
+                "properties": {
+                  "title": {
+                    "type": "string",
+                    "description": "The title of the research paper",
+                    "example": "Machine Learning Approaches for Climate Change Prediction"
+                  },
+                  "research_field": {
+                    "type": "string",
+                    "description": "The field of research",
+                    "example": "Computer Science - Machine Learning"
+                  },
+                  "methodology": {
+                    "type": "string",
+                    "description": "Research methodology and approach",
+                    "example": "Deep learning with convolutional neural networks"
+                  },
+                  "expected_results": {
+                    "type": "string",
+                    "description": "Expected outcomes and results",
+                    "example": "Improved accuracy in climate prediction models"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Validation completed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "valid": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "errors": {
+                      "type": "array",
+                      "items": {"type": "string"},
+                      "description": "Validation errors if any"
+                    },
+                    "warnings": {
+                      "type": "array",
+                      "items": {"type": "string"},
+                      "description": "Validation warnings if any"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {"type": "string"}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Error": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string",
+            "description": "Error message"
+          }
+        }
+      },
+      "ValidationError": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string",
+            "description": "Error message"
+          },
+          "errors": {
+            "type": "array",
+            "items": {"type": "string"},
+            "description": "List of validation errors"
+          },
+          "warnings": {
+            "type": "array",
+            "items": {"type": "string"},
+            "description": "List of validation warnings"
+          }
+        }
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "System",
+      "description": "System health and status endpoints"
+    },
+    {
+      "name": "Paper Generation",
+      "description": "Endpoints for generating IEEE conference papers"
+    },
+    {
+      "name": "PDF Processing",
+      "description": "Endpoints for uploading and analyzing PDF files"
+    },
+    {
+      "name": "PDF Generation",
+      "description": "Endpoints for generating PDF files from content"
+    },
+    {
+      "name": "Statistics",
+      "description": "Endpoints for API usage statistics"
+    },
+    {
+      "name": "Validation",
+      "description": "Endpoints for input validation"
+    }
+  ]
+} 

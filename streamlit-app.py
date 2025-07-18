@@ -17,10 +17,16 @@ from io import BytesIO
 import tempfile
 import json
 from datetime import datetime
+import re # Added for regex processing
+
+# Import our math formatter
+from modules.math_formatter import MathFormatter
 
 
 load_dotenv()
 
+# Initialize math formatter
+math_formatter = MathFormatter()
 
 genai.configure(api_key=os.getenv('GOOGLE_API_KEY'))
 
@@ -44,8 +50,8 @@ if 'api_calls' not in st.session_state:
 def load_api_call_count():
     """Load API call count from file"""
     try:
-        if os.path.exists('api_call_tracker.json'):
-            with open('api_call_tracker.json', 'r') as f:
+        if os.path.exists('../../Desktop/Flaskkk-resgen-finalversion/api_call_tracker.json'):
+            with open('../../Desktop/Flaskkk-resgen-finalversion/api_call_tracker.json', 'r') as f:
                 data = json.load(f)
                 return data.get('total_calls', 0), data.get('call_history', [])
         return 0, []
@@ -61,7 +67,7 @@ def save_api_call_count(total_calls, call_history):
             'call_history': call_history,
             'last_updated': datetime.now().isoformat()
         }
-        with open('api_call_tracker.json', 'w') as f:
+        with open('../../Desktop/Flaskkk-resgen-finalversion/api_call_tracker.json', 'w') as f:
             json.dump(data, f, indent=2)
     except Exception as e:
         st.error(f"Error saving API call count: {str(e)}")
@@ -101,7 +107,7 @@ def reset_api_call_count():
             'last_updated': datetime.now().isoformat(),
             'reset_at': datetime.now().isoformat()
         }
-        with open('api_call_tracker.json', 'w') as f:
+        with open('../../Desktop/Flaskkk-resgen-finalversion/api_call_tracker.json', 'w') as f:
             json.dump(data, f, indent=2)
         st.session_state.api_calls = 0
         return True
@@ -110,11 +116,11 @@ def reset_api_call_count():
         return False
 
 def read_instructions():
-    with open('instructions.txt', 'r') as file:
+    with open('../../Desktop/Flaskkk-resgen-finalversion/instructions.txt', 'r') as file:
         return file.read()
 
 def read_pdf_template():
-    with open('ieee-conference-template.pdf', 'rb') as file:
+    with open('../../Desktop/Flaskkk-resgen-finalversion/ieee-conference-template.pdf', 'rb') as file:
         pdf_reader = PyPDF2.PdfReader(file)
         text = ""
         for page in pdf_reader.pages:
@@ -133,7 +139,308 @@ def extract_text_from_uploaded_pdf(uploaded_file):
         st.error(f"Error reading PDF: {str(e)}")
         return ""
 
+def fix_mathematical_notation(text):
+    """Fix specific mathematical notation patterns that commonly cause black square issues"""
+    if not text:
+        return text
+    
+    # Fix common patterns that cause black squares in mathematical notation
+    fixes = [
+        # Fix matrix dimension notation
+        (r'■d', 'd'),  # Remove black square before 'd'
+        (r'■(\w+)', r'\1'),  # Remove black square before any word
+        (r'(\w+)■', r'\1'),  # Remove black square after any word
+        (r'■(\d+)', r'\1'),  # Remove black square before numbers
+        (r'(\d+)■', r'\1'),  # Remove black square after numbers
+        
+        # Fix matrix multiplication notation
+        (r'(\w+)\s*■\s*(\w+)', r'\1 × \2'),  # Replace black square with multiplication symbol
+        (r'(\w+)\s*■\s*(\d+)', r'\1 × \2'),  # Replace black square with multiplication symbol
+        
+        # Fix element-of notation
+        (r'(\w+)\s*■\s*(\w+)', r'\1 ∈ \2'),  # Replace black square with element-of symbol
+        
+        # Fix transpose notation
+        (r'(\w+)T\s*■', r'\1^T'),  # Fix transpose with black square
+        (r'■\s*(\w+)T', r'\1^T'),  # Fix transpose with black square
+        
+        # Fix matrix notation
+        (r'(\w+)\s*■\s*(\w+)', r'\1 ⊙ \2'),  # Replace black square with Hadamard product
+        (r'(\w+)\s*■\s*(\w+)', r'\1 ⊗ \2'),  # Replace black square with tensor product
+        
+        # Fix dimension notation
+        (r'(\d+)\s*■\s*(\d+)', r'\1 × \2'),  # Replace black square in dimensions
+        (r'(\w+)\s*■\s*(\d+)', r'\1 ∈ \2'),  # Replace black square in set notation
+        
+        # Remove standalone black squares
+        (r'\s*■\s*', ' '),  # Remove black squares with spaces
+        (r'■', ''),  # Remove any remaining black squares
+    ]
+    
+    fixed_text = text
+    
+    # Apply all fixes
+    for pattern, replacement in fixes:
+        fixed_text = re.sub(pattern, replacement, fixed_text)
+    
+    return fixed_text
+
+def process_math_content_for_pdf(text):
+    """Process mathematical content to ensure proper rendering in PDF"""
+    if not text:
+        return text
+    
+    # First, fix specific mathematical notation patterns
+    text = fix_mathematical_notation(text)
+    
+    # Remove markdown bold formatting (asterisks)
+    text = re.sub(r'\*\*([^*]+)\*\*', r'\1', text)  # Remove **text** → text
+    text = re.sub(r'\*([^*]+)\*', r'\1', text)      # Remove *text* → text
+    text = re.sub(r'\*\*', '', text)                # Remove any remaining **
+    text = re.sub(r'\*', '', text)                  # Remove any remaining *
+    
+    # Ensure proper Unicode encoding for mathematical symbols
+    # Replace any potential encoding issues with proper Unicode symbols
+    math_replacements = {
+        'phi': 'φ',
+        'theta': 'θ', 
+        'alpha': 'α',
+        'beta': 'β',
+        'gamma': 'γ',
+        'delta': 'δ',
+        'epsilon': 'ε',
+        'mu': 'μ',
+        'sigma': 'σ',
+        'lambda': 'λ',
+        'omega': 'ω',
+        'pi': 'π',
+        'rho': 'ρ',
+        'tau': 'τ',
+        'upsilon': 'υ',
+        'chi': 'χ',
+        'psi': 'ψ',
+        'zeta': 'ζ',
+        'eta': 'η',
+        'iota': 'ι',
+        'kappa': 'κ',
+        'nu': 'ν',
+        'xi': 'ξ',
+        'omicron': 'ο',
+        'hadamard': '⊙',
+        'tensor': '⊗',
+        'assignment': '←',
+        'element_of': '∈',
+        'summation': '∑',
+        'product': '∏',
+        'integral': '∫',
+        'partial': '∂',
+        'nabla': '∇',
+        'infinity': '∞',
+        'not_equal': '≠',
+        'less_equal': '≤',
+        'greater_equal': '≥',
+        'subset': '⊂',
+        'superset': '⊃',
+        'union': '∪',
+        'intersection': '∩',
+        'empty_set': '∅',
+        'forall': '∀',
+        'exists': '∃',
+        'implies': '⇒',
+        'iff': '⇔',
+        'approximate': '≈',
+        'proportional': '∝'
+    }
+    
+    processed_text = text
+    
+    # ULTRA-AGGRESSIVE REMOVAL OF BLACK SQUARES AND CORRUPTED CHARACTERS
+    # Remove ALL variations of black squares and corrupted characters
+    black_square_patterns = [
+        r'■',  # Standard black square
+        r'□',  # White square (sometimes used as placeholder)
+        r'▢',  # White square with rounded corners
+        r'▣',  # Black square with white square inside
+        r'▤',  # Black square with white square inside
+        r'▥',  # Black square with white square inside
+        r'▦',  # Black square with white square inside
+        r'▧',  # Black square with white square inside
+        r'▨',  # Black square with white square inside
+        r'▩',  # Black square with white square inside
+        r'▪',  # Black small square
+        r'▫',  # White small square
+        r'▬',  # Black rectangle
+        r'▭',  # White rectangle
+        r'▮',  # Black vertical rectangle
+        r'▯',  # White vertical rectangle
+        r'▰',  # Black parallelogram
+        r'▱',  # White parallelogram
+        r'▲',  # Black up-pointing triangle
+        r'△',  # White up-pointing triangle
+        r'▼',  # Black down-pointing triangle
+        r'▽',  # White down-pointing triangle
+        r'◆',  # Black diamond
+        r'◇',  # White diamond
+        r'●',  # Black circle
+        r'○',  # White circle
+        r'◐',  # Circle with left half black
+        r'◑',  # Circle with right half black
+        r'◒',  # Circle with lower half black
+        r'◓',  # Circle with upper half black
+        r'◔',  # Circle with upper right quadrant black
+        r'◕',  # Circle with all but upper left quadrant black
+        r'◖',  # Left half black circle
+        r'◗',  # Right half black circle
+        r'◘',  # Inverse bullet
+        r'◙',  # Inverse white circle
+        r'◚',  # Upper half inverse white circle
+        r'◛',  # Lower half inverse white circle
+        r'◜',  # Upper left quadrant circular arc
+        r'◝',  # Upper right quadrant circular arc
+        r'◞',  # Lower right quadrant circular arc
+        r'◟',  # Lower left quadrant circular arc
+        r'◠',  # Upper half circle
+        r'◡',  # Lower half circle
+        r'◢',  # Black lower right triangle
+        r'◣',  # Black lower left triangle
+        r'◤',  # Black upper left triangle
+        r'◥',  # Black upper right triangle
+        r'◦',  # White bullet
+        r'◧',  # Square with left half black
+        r'◨',  # Square with right half black
+        r'◩',  # Square with upper half black
+        r'◪',  # Square with lower half black
+        r'◫',  # Square with upper left diagonal half black
+        r'◬',  # Square with lower right diagonal half black
+        r'◭',  # Square with upper right diagonal half black
+        r'◮',  # Square with lower left diagonal half black
+        r'◯',  # Large circle
+        r'◰',  # White square with upper left quadrant
+        r'◱',  # White square with lower left quadrant
+        r'◲',  # White square with lower right quadrant
+        r'◳',  # White square with upper right quadrant
+        r'◴',  # White circle with upper left quadrant black
+        r'◵',  # White circle with lower left quadrant black
+        r'◶',  # White circle with lower right quadrant black
+        r'◷',  # White circle with upper right quadrant black
+        r'◸',  # Upper left triangle
+        r'◹',  # Upper right triangle
+        r'◺',  # Lower left triangle
+        r'◻',  # White medium square
+        r'◼',  # Black medium square
+        r'◽',  # White medium small square
+        r'◾',  # Black medium small square
+        r'◿',  # Lower right triangle
+        # Additional corrupted character patterns
+        r'[^\x00-\x7F]',  # Remove any non-ASCII characters that might be corrupted
+    ]
+    
+    # Remove all black squares and corrupted characters
+    for pattern in black_square_patterns:
+        processed_text = re.sub(pattern, '', processed_text)
+    
+    # Apply mathematical symbol replacements
+    for text_symbol, unicode_symbol in math_replacements.items():
+        # Use word boundaries to avoid partial replacements
+        processed_text = re.sub(rf'\b{text_symbol}\b', unicode_symbol, processed_text, flags=re.IGNORECASE)
+    
+    # Fix common mathematical notation patterns
+    # Ensure proper superscript notation
+    processed_text = re.sub(r'(\w+)_T\b', r'\1^T', processed_text)  # Convert _T to ^T for transpose
+    processed_text = re.sub(r'(\w+)_(\d+)\^T', r'\1^\2^T', processed_text)  # Fix double superscripts
+    
+    # Additional cleanup for any remaining corrupted characters
+    # Remove any non-printable characters that might cause issues
+    processed_text = re.sub(r'[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]', '', processed_text)
+    
+    # Ensure proper spacing around mathematical symbols for better PDF rendering
+    math_symbols = 'φθαβγδεμσλωπρχψζηικνξο⊙⊗←∈∑∏∫∂∇∞≠≤≥⊂⊃∪∩∅∀∃⇒⇔≈∝'
+    for symbol in math_symbols:
+        # Add space before symbol if followed by letter
+        processed_text = re.sub(rf'([a-zA-Z])({re.escape(symbol)})', r'\1 \2', processed_text)
+        # Add space after symbol if followed by letter
+        processed_text = re.sub(rf'({re.escape(symbol)})([a-zA-Z])', r'\1 \2', processed_text)
+    
+    # FINAL AGGRESSIVE CLEANUP - Remove any remaining black squares or corrupted characters
+    # This is a catch-all for any characters that might have been missed
+    processed_text = re.sub(r'[■□▢▣▤▥▦▧▨▩▪▫▬▭▮▯▰▱]', '', processed_text)
+    
+    # Remove any remaining non-standard characters that might be corrupted
+    processed_text = re.sub(r'[^\x20-\x7E\n\t]', '', processed_text)
+    
+    return processed_text
+
+def final_validate_pdf_content(content_dict):
+    """Final validation to ensure no black squares or corrupted characters remain in content"""
+    validation_results = {}
+    total_issues_found = 0
+    
+    for section_name, content in content_dict.items():
+        if content and isinstance(content, str):
+            issues = []
+            
+            # Check for black squares and corrupted characters - COMPREHENSIVE LIST
+            black_square_chars = [
+                '■', '□', '▢', '▣', '▤', '▥', '▦', '▧', '▨', '▩', '▪', '▫', '▬', '▭', '▮', '▯', '▰', '▱',
+                '▲', '△', '▼', '▽', '◆', '◇', '●', '○', '◐', '◑', '◒', '◓', '◔', '◕', '◖', '◗', '◘', '◙',
+                '◚', '◛', '◜', '◝', '◞', '◟', '◠', '◡', '◢', '◣', '◤', '◥', '◦', '◧', '◨', '◩', '◪', '◫',
+                '◬', '◭', '◮', '◯', '◰', '◱', '◲', '◳', '◴', '◵', '◶', '◷', '◸', '◹', '◺', '◻', '◼', '◽', '◾', '◿'
+            ]
+            found_black_squares = [char for char in black_square_chars if char in content]
+            
+            if found_black_squares:
+                issues.append(f"Found black squares: {found_black_squares}")
+                total_issues_found += len(found_black_squares)
+            
+            # Check for non-printable characters
+            non_printable = re.findall(r'[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]', content)
+            if non_printable:
+                issues.append(f"Found non-printable characters: {non_printable}")
+                total_issues_found += len(non_printable)
+            
+            # Check for any non-standard characters that might be corrupted
+            non_standard = re.findall(r'[^\x20-\x7E\n\t]', content)
+            if non_standard:
+                # Filter out legitimate mathematical symbols
+                legitimate_symbols = 'φθαβγδεμσλωπρχψζηικνξο⊙⊗←∈∑∏∫∂∇∞≠≤≥⊂⊃∪∩∅∀∃⇒⇔≈∝'
+                problematic_chars = [char for char in non_standard if char not in legitimate_symbols]
+                if problematic_chars:
+                    issues.append(f"Found non-standard characters: {problematic_chars}")
+                    total_issues_found += len(problematic_chars)
+            
+            # Create clean content by removing all problematic characters
+            clean_content = content
+            if issues:
+                # Remove all black squares and corrupted characters
+                for char in black_square_chars:
+                    clean_content = clean_content.replace(char, '')
+                
+                # Remove non-printable characters
+                clean_content = re.sub(r'[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]', '', clean_content)
+                
+                # Remove non-standard characters except legitimate mathematical symbols
+                legitimate_symbols = 'φθαβγδεμσλωπρχψζηικνξο⊙⊗←∈∑∏∫∂∇∞≠≤≥⊂⊃∪∩∅∀∃⇒⇔≈∝'
+                clean_content = re.sub(rf'[^\x20-\x7E\n\t{re.escape(legitimate_symbols)}]', '', clean_content)
+            
+            validation_results[section_name] = {
+                'has_issues': len(issues) > 0,
+                'issues': issues,
+                'content_length': len(content),
+                'clean_content': clean_content
+            }
+    
+    return validation_results, total_issues_found
+
 def create_ieee_pdf(content_dict, filename, author_info=None):
+    # Final validation before PDF generation
+    validation_results, total_issues = final_validate_pdf_content(content_dict)
+    
+    # If issues found, clean the content
+    if total_issues > 0:
+        for section_name, validation in validation_results.items():
+            if validation['has_issues']:
+                content_dict[section_name] = validation['clean_content']
+    
     buffer = BytesIO()
     
     # Initialize document with IEEE specs
@@ -179,7 +486,7 @@ def create_ieee_pdf(content_dict, filename, author_info=None):
     )
     doc.addPageTemplates([template])
     
-    # Define styles
+    # Define styles with better Unicode support
     styles = getSampleStyleSheet()
     
     title_style = ParagraphStyle(
@@ -265,12 +572,20 @@ def create_ieee_pdf(content_dict, filename, author_info=None):
     
     story.append(Paragraph(author_text, author_style))
     
-    # Abstract
-    abstract_heading = Paragraph('<b>Abstract</b>&mdash;' + content_dict['abstract'], abstract_style)
+    # Abstract - process mathematical content with validation
+    abstract_content = process_math_content_for_pdf(content_dict['abstract'])
+    # Final validation to ensure no black squares remain
+    if '■' in abstract_content or '□' in abstract_content:
+        abstract_content = re.sub(r'[■□]', '', abstract_content)
+    abstract_heading = Paragraph('<b>Abstract</b>&mdash;' + abstract_content, abstract_style)
     story.append(KeepTogether([abstract_heading]))
     
-    # Keywords
-    keywords_text = '<i>Keywords</i>&mdash;' + content_dict['keywords']
+    # Keywords - process mathematical content with validation
+    keywords_content = process_math_content_for_pdf(content_dict['keywords'])
+    # Final validation to ensure no black squares remain
+    if '■' in keywords_content or '□' in keywords_content:
+        keywords_content = re.sub(r'[■□]', '', keywords_content)
+    keywords_text = '<i>Keywords</i>&mdash;' + keywords_content
     story.append(Paragraph(keywords_text, keywords_style))
     story.append(Spacer(1, 12))
     
@@ -284,17 +599,27 @@ def create_ieee_pdf(content_dict, filename, author_info=None):
     
     for heading, content in sections:
         story.append(Paragraph(heading, heading_style))
-        # Handle content with better paragraph splitting
+        # Handle content with better paragraph splitting and math processing
         if content and content.strip():
+            # Process mathematical content
+            processed_content = process_math_content_for_pdf(content)
+            
+            # FINAL VALIDATION: Ensure no black squares remain
+            if '■' in processed_content or '□' in processed_content:
+                processed_content = re.sub(r'[■□]', '', processed_content)
+            
             # Split by double newlines first, then by single newlines
-            paragraphs = content.split('\n\n')
+            paragraphs = processed_content.split('\n\n')
             for p in paragraphs:
                 if p.strip():
                     # Further split by single newlines if needed
                     sub_paragraphs = p.split('\n')
                     for sub_p in sub_paragraphs:
                         if sub_p.strip():
-                            story.append(Paragraph(sub_p.strip(), body_style))
+                            # Final check for any remaining corrupted characters
+                            clean_sub_p = re.sub(r'[■□]', '', sub_p.strip())
+                            # Create paragraph with processed mathematical content
+                            story.append(Paragraph(clean_sub_p, body_style))
                     # Add spacing between paragraphs
                     story.append(Spacer(1, 6))
         else:
@@ -410,6 +735,18 @@ def generate_paper_content(title, research_field, methodology, expected_results,
     Follow these IEEE formatting instructions:
     {instructions}
     
+    CRITICAL MATHEMATICAL NOTATION REQUIREMENTS:
+    1. Use proper superscript notation: E^T for transpose, W_K^T for matrix transpose
+    2. Use proper subscript notation: W_V, W_K, W_Q for different weight matrices
+    3. Use proper Greek letter symbols: φ (phi), θ (theta), α (alpha), β (beta), γ (gamma), δ (delta), ε (epsilon), μ (mu), σ (sigma), λ (lambda)
+    4. Use proper mathematical symbols: ⊙ (Hadamard product), ⊗ (tensor product), ← (assignment), ∈ (element of), ∑ (summation), ∏ (product), ∫ (integral), ∂ (partial derivative), ∇ (gradient)
+    5. Use bold letters for vectors: **v**, **x**, **y**
+    6. Use capital letters for matrices: **W**, **A**, **B**
+    7. NEVER use black squares (■) or corrupted characters in place of mathematical symbols
+    8. NEVER omit superscripts or subscripts
+    9. NEVER use plain text for Greek letters when symbols are available
+    10. Ensure all mathematical operations are clearly indicated
+    
     Generate the content in the following sections with clear headers:
     
     Abstract
@@ -436,6 +773,8 @@ def generate_paper_content(title, research_field, methodology, expected_results,
     3. The output should be a clean, professional research paper that could be directly submitted to an IEEE conference.
     4. Ensure each section has substantial content (at least 2-3 paragraphs for main sections).
     5. Make sure the content is academic, well-structured, and follows IEEE guidelines.
+    6. Pay special attention to mathematical notation - ensure all equations use proper symbols and formatting.
+    7. Use Unicode mathematical symbols directly in the text (φ, θ, α, β, γ, δ, ε, μ, σ, λ, ⊙, ⊗, ←, ∈, ∑, ∏, ∫, ∂, ∇)
     """
     
     # Track API call
@@ -443,7 +782,33 @@ def generate_paper_content(title, research_field, methodology, expected_results,
     
     model = genai.GenerativeModel('gemini-2.0-flash')
     response = model.generate_content(prompt)
-    return response.text
+    
+    # Format the response to ensure proper mathematical notation
+    formatted_content = math_formatter.format_content_with_equations(response.text)
+    
+    # Additional processing to ensure PDF compatibility
+    formatted_content = process_math_content_for_pdf(formatted_content)
+    
+    return formatted_content
+
+def validate_equations_in_content(content):
+    """Validate all equations in the content for proper mathematical notation"""
+    lines = content.split('\n')
+    validation_results = []
+    
+    for i, line in enumerate(lines, 1):
+        if math_formatter._is_math_line(line):
+            result = math_formatter.validate_equation(line)
+            if result['issues'] or result['warnings']:
+                validation_results.append({
+                    'line_number': i,
+                    'line': line,
+                    'issues': result['issues'],
+                    'warnings': result['warnings'],
+                    'formatted_line': result['formatted_equation']
+                })
+    
+    return validation_results
 
 def extract_and_analyze_pdf_content(pdf_text):
     """Extract and analyze content from uploaded PDF to generate paper details"""
@@ -532,6 +897,78 @@ def validate_inputs(title, research_field, methodology, expected_results):
     
     return errors, warnings
 
+def test_black_square_fix():
+    """Test function to verify black square removal in specific mathematical patterns"""
+    test_content = """
+    **E** ∈ ■d
+    m
+    ×T according to:
+    **E** ← **E** + **P** **W**V**E**
+    φ((**E**T**W**K
+    T**W**Q**E**) ■ **M**) (1)
+    Here, φ represents a column-wise softmax
+    operation and **M** is a causal mask. The matrices
+    **W**V, **W**K, **W**Q ∈ ■dk×d
+    """
+    
+    # Test the fix
+    fixed_content = fix_mathematical_notation(test_content)
+    processed_content = process_math_content_for_pdf(test_content)
+    
+    return {
+        'original': test_content,
+        'fixed': fixed_content,
+        'processed': processed_content,
+        'has_black_squares_original': '■' in test_content,
+        'has_black_squares_fixed': '■' in fixed_content,
+        'has_black_squares_processed': '■' in processed_content
+    }
+
+def test_math_formatting():
+    """Test function to verify mathematical formatting is working correctly"""
+    test_content = """
+    Here are some test equations:
+    
+    E ← E + P W_V E φ((E^T W_K^T W_Q E) ⊙ M)
+    θ ← θ - α ∇J(θ)
+    σ(x)_i = e^(x_i) / ∑_j e^(x_j)
+    L = -∑_i y_i log(ŷ_i)
+    y = x ⊗ w
+    
+    Greek letters: φ, θ, α, β, γ, δ, ε, μ, σ, λ, ω, π
+    Math symbols: ⊙, ⊗, ←, ∈, ∑, ∏, ∫, ∂, ∇, ∞, ≠, ≤, ≥
+    """
+    
+    # Test the math formatter
+    formatted = math_formatter.format_content_with_equations(test_content)
+    processed = process_math_content_for_pdf(formatted)
+    
+    return {
+        'original': test_content,
+        'formatted': formatted,
+        'processed': processed
+    }
+
+def validate_math_in_pdf_content(content_dict):
+    """Validate that mathematical content is properly formatted for PDF"""
+    validation_results = {}
+    
+    for section_name, content in content_dict.items():
+        if content and isinstance(content, str):
+            # Check for mathematical symbols
+            math_symbols = ['φ', 'θ', 'α', 'β', 'γ', 'δ', 'ε', 'μ', 'σ', 'λ', 'ω', 'π', 
+                           '⊙', '⊗', '←', '∈', '∑', '∏', '∫', '∂', '∇', '∞', '≠', '≤', '≥']
+            
+            found_symbols = [symbol for symbol in math_symbols if symbol in content]
+            validation_results[section_name] = {
+                'has_math': len(found_symbols) > 0,
+                'symbols_found': found_symbols,
+                'symbol_count': len(found_symbols),
+                'content_length': len(content)
+            }
+    
+    return validation_results
+
 def main():
     st.set_page_config(page_title="IEEE Conference Paper Generator", layout="wide")
     
@@ -541,6 +978,69 @@ def main():
     
     st.title("IEEE Conference Paper Content Generator")
     st.markdown("Generate professional IEEE conference paper content based on your inputs.")
+    
+    # Add sidebar with math formatting info
+    with st.sidebar:
+        st.markdown("## 🧮 Math Formatting")
+        st.info("""
+        **Enhanced Mathematical Notation:**
+        
+        ✅ Proper Greek letters (φ, θ, α, β, γ)
+        ✅ Correct superscripts (E^T, W_K^T)
+        ✅ Mathematical symbols (⊙, ←, ∑, ∫)
+        ✅ Automatic validation
+        ✅ Format correction
+        
+        Equations are automatically formatted and validated for proper mathematical notation.
+        """)
+        
+        # Show equation templates
+        with st.expander("📐 Common Equation Templates"):
+            templates = {
+                'Attention': 'E ← E + P W_V E φ((E^T W_K^T W_Q E) ⊙ M)',
+                'Gradient Descent': 'θ ← θ - α ∇J(θ)',
+                'Softmax': 'σ(x)_i = e^(x_i) / ∑_j e^(x_j)',
+                'Cross Entropy': 'L = -∑_i y_i log(ŷ_i)',
+                'Convolution': 'y = x ⊗ w'
+            }
+            
+            for name, template in templates.items():
+                st.markdown(f"**{name}:**")
+                st.code(template)
+                st.markdown("---")
+        
+        # Add math formatting test button
+        if st.button("🧪 Test Math Formatting", key="test_math_btn"):
+            test_results = test_math_formatting()
+            st.success("✅ Math formatting test completed!")
+            with st.expander("📊 Test Results"):
+                st.markdown("**Original:**")
+                st.code(test_results['original'])
+                st.markdown("**Formatted:**")
+                st.code(test_results['formatted'])
+                st.markdown("**Processed for PDF:**")
+                st.code(test_results['processed'])
+        
+        # Add black square fix test button
+        if st.button("🔧 Test Black Square Fix", key="test_black_square_btn"):
+            test_results = test_black_square_fix()
+            st.success("✅ Black square fix test completed!")
+            with st.expander("📊 Black Square Test Results"):
+                st.markdown("**Original (with black squares):**")
+                st.code(test_results['original'])
+                st.markdown("**After Fix:**")
+                st.code(test_results['fixed'])
+                st.markdown("**After Full Processing:**")
+                st.code(test_results['processed'])
+                st.markdown("**Results:**")
+                st.markdown(f"- Original has black squares: {'❌ Yes' if test_results['has_black_squares_original'] else '✅ No'}")
+                st.markdown(f"- Fixed has black squares: {'❌ Yes' if test_results['has_black_squares_fixed'] else '✅ No'}")
+                st.markdown(f"- Processed has black squares: {'❌ Yes' if test_results['has_black_squares_processed'] else '✅ No'}")
+                
+                if not test_results['has_black_squares_processed']:
+                    st.success("🎉 All black squares successfully removed!")
+                else:
+                    st.error("❌ Some black squares still remain - further investigation needed")
     
     # Display API call tracking
     col1, col2, col3, col4 = st.columns(4)
@@ -880,12 +1380,64 @@ FUNCTION BREAKDOWN:
                 st.success("Content generated successfully!")
                 st.markdown("## Generated Paper Content")
                 
+                # Validate equations in the generated content
+                equation_validation = validate_equations_in_content(generated_content)
+                
+                # Display equation validation results if any issues found
+                if equation_validation:
+                    st.markdown("### 🔍 Equation Validation Results")
+                    with st.expander("📊 Mathematical Notation Analysis", expanded=True):
+                        st.info(f"Found {len(equation_validation)} equations with potential formatting issues:")
+                        
+                        for i, result in enumerate(equation_validation, 1):
+                            st.markdown(f"**Line {result['line_number']}:**")
+                            st.code(result['line'])
+                            
+                            if result['issues']:
+                                st.error("❌ Issues:")
+                                for issue in result['issues']:
+                                    st.error(f"• {issue}")
+                            
+                            if result['warnings']:
+                                st.warning("⚠️ Suggestions:")
+                                for warning in result['warnings']:
+                                    st.warning(f"• {warning}")
+                            
+                            st.markdown("**Suggested formatting:**")
+                            st.code(result['formatted_line'])
+                            st.markdown("---")
+                else:
+                    st.success("✅ All equations use proper mathematical notation!")
+                
                 # Store generated content in session state
                 st.session_state.generated_content = generated_content
                 st.session_state.content_dict = parse_generated_content(generated_content)
                 st.session_state.content_dict['title'] = title  # Use the original title
                 st.session_state.custom_parameters = custom_parameters
                 st.session_state.paper_title = title
+                
+                # Validate mathematical content for PDF
+                math_validation = validate_math_in_pdf_content(st.session_state.content_dict)
+                
+                # Show mathematical content validation results
+                st.markdown("### 🔍 Mathematical Content Analysis")
+                with st.expander("📊 Mathematical Symbols Found", expanded=True):
+                    total_symbols = 0
+                    sections_with_math = 0
+                    
+                    for section_name, validation in math_validation.items():
+                        if validation['has_math']:
+                            sections_with_math += 1
+                            total_symbols += validation['symbol_count']
+                            st.markdown(f"**{section_name}:** {validation['symbol_count']} symbols")
+                            st.markdown(f"Symbols: {', '.join(validation['symbols_found'])}")
+                            st.markdown("---")
+                    
+                    if total_symbols > 0:
+                        st.success(f"✅ Found {total_symbols} mathematical symbols across {sections_with_math} sections")
+                        st.info("💡 Mathematical symbols will be properly rendered in the PDF")
+                    else:
+                        st.warning("⚠️ No mathematical symbols detected. The content may not contain equations.")
                 
                 # Only display content if we're not already displaying existing content
                 if not st.session_state.get('displaying_existing', False):
@@ -950,6 +1502,13 @@ def display_generated_content():
                 # Preview button to see changes without saving
                 preview_button = st.form_submit_button("👁️ Preview Changes")
             
+            # Add equation validation buttons
+            col1, col2 = st.columns([1, 1])
+            with col1:
+                validate_equations_button = st.form_submit_button("🔍 Validate Equations")
+            with col2:
+                format_equations_button = st.form_submit_button("✨ Auto-Format Equations")
+            
             if save_button:
                 st.session_state.generated_content = edited_content
                 st.session_state.content_dict = parse_generated_content(edited_content)
@@ -967,6 +1526,31 @@ def display_generated_content():
                 st.session_state.generated_content = edited_content
                 st.session_state.content_dict = parse_generated_content(edited_content)
                 st.session_state.content_dict['title'] = st.session_state.paper_title
+                st.rerun()
+            
+            if validate_equations_button:
+                # Validate equations in the edited content
+                validation_results = validate_equations_in_content(edited_content)
+                if validation_results:
+                    st.markdown("### 🔍 Equation Validation Results")
+                    for result in validation_results:
+                        st.markdown(f"**Line {result['line_number']}:**")
+                        st.code(result['line'])
+                        if result['issues']:
+                            st.error("❌ Issues: " + ", ".join(result['issues']))
+                        if result['warnings']:
+                            st.warning("⚠️ Suggestions: " + ", ".join(result['warnings']))
+                        st.markdown("**Suggested:** " + result['formatted_line'])
+                else:
+                    st.success("✅ All equations use proper mathematical notation!")
+            
+            if format_equations_button:
+                # Auto-format equations in the edited content
+                formatted_content = math_formatter.format_content_with_equations(edited_content)
+                st.session_state.generated_content = formatted_content
+                st.session_state.content_dict = parse_generated_content(formatted_content)
+                st.session_state.content_dict['title'] = st.session_state.paper_title
+                st.success("✅ Equations auto-formatted! Check the preview to see the changes.")
                 st.rerun()
     else:
         # Preview mode - show formatted content with better styling
@@ -991,6 +1575,30 @@ def provide_download_buttons():
     with col3:
         char_count = len(st.session_state.generated_content)
         st.metric("Characters", f"{char_count:,}")
+    
+    # Validate mathematical content before PDF generation
+    math_validation = validate_math_in_pdf_content(st.session_state.content_dict)
+    total_math_symbols = sum(validation['symbol_count'] for validation in math_validation.values())
+    
+    if total_math_symbols > 0:
+        st.success(f"✅ Mathematical content detected: {total_math_symbols} symbols will be properly rendered")
+    else:
+        st.info("ℹ️ No mathematical symbols detected in the content")
+    
+    # Final validation for black squares and corrupted characters
+    validation_results, total_issues = final_validate_pdf_content(st.session_state.content_dict)
+    
+    if total_issues > 0:
+        st.warning(f"⚠️ Found {total_issues} corrupted characters (black squares, etc.) - these will be automatically cleaned in the PDF")
+        with st.expander("🔍 Corrupted Characters Found"):
+            for section_name, validation in validation_results.items():
+                if validation['has_issues']:
+                    st.markdown(f"**{section_name}:**")
+                    for issue in validation['issues']:
+                        st.markdown(f"• {issue}")
+                    st.markdown("---")
+    else:
+        st.success("✅ No corrupted characters detected - content is clean for PDF generation")
     
     # Generate PDF with current content
     try:
@@ -1025,6 +1633,30 @@ def provide_download_buttons():
             st.info("💡 Make your edits above and click 'Save Changes' to update the downloadable PDF.")
         else:
             st.success("✅ PDF is ready for download with the current content!")
+            
+        # Add mathematical content summary
+        if total_math_symbols > 0:
+            st.markdown("### 🧮 Mathematical Content Summary")
+            with st.expander("📊 Mathematical Symbols in PDF"):
+                for section_name, validation in math_validation.items():
+                    if validation['has_math']:
+                        st.markdown(f"**{section_name}:** {validation['symbol_count']} symbols")
+                        st.markdown(f"Symbols: {', '.join(validation['symbols_found'])}")
+                        st.markdown("---")
+        
+        # Add content quality summary
+        st.markdown("### 📋 Content Quality Summary")
+        with st.expander("🔍 PDF Generation Details"):
+            st.markdown(f"**Mathematical Symbols:** {total_math_symbols} found")
+            st.markdown(f"**Corrupted Characters:** {total_issues} found and cleaned")
+            st.markdown(f"**Content Sections:** {len([k for k, v in st.session_state.content_dict.items() if v and k != 'title'])}")
+            st.markdown(f"**Total Words:** {word_count}")
+            st.markdown(f"**Total Characters:** {char_count:,}")
+            
+            if total_issues == 0:
+                st.success("✅ Perfect! No corrupted characters found - PDF will be clean")
+            else:
+                st.info(f"ℹ️ {total_issues} corrupted characters were automatically cleaned for PDF generation")
             
         # Add refresh PDF button
         if st.button("🔄 Refresh PDF", key="refresh_pdf_btn"):

@@ -121,10 +121,47 @@ This research was supported by the IEEE Research Grant No. 123456.
 
 * Center aligned
 * Number equations on the right (e.g., (1))
+* Use proper mathematical notation with clear formatting
+
+#### Mathematical Notation Guidelines:
+
+**Superscripts and Subscripts:**
+- Use proper superscript notation: `E^T` for transpose, `W_K^T` for matrix transpose
+- Use proper subscript notation: `W_V`, `W_K`, `W_Q` for different weight matrices
+- Ensure all mathematical symbols are clearly readable
+
+**Greek Letters:**
+- Use proper Greek letter notation: `φ` (phi), `θ` (theta), `α` (alpha), `β` (beta), `γ` (gamma), `δ` (delta), `ε` (epsilon), `μ` (mu), `σ` (sigma), `λ` (lambda)
+- Avoid using "phi" text when `φ` symbol should be used
+
+**Special Mathematical Symbols:**
+- Use `⊙` (circled dot) for Hadamard product/element-wise multiplication
+- Use `⊗` (circled times) for tensor product
+- Use `←` (left arrow) for assignment operations
+- Use `∈` (element of) for set membership
+- Use `∑` (summation) for sums
+- Use `∏` (product) for products
+- Use `∫` (integral) for integrals
+- Use `∂` (partial derivative) for partial derivatives
+- Use `∇` (nabla) for gradient
+
+**Matrix and Vector Notation:**
+- Use bold letters for vectors: **v**, **x**, **y**
+- Use capital letters for matrices: **W**, **A**, **B**
+- Use proper transpose notation: **A^T**
+- Use proper inverse notation: **A^(-1)**
+
+**Example of Proper Equation Formatting:**
 
 ```latex
-E = mc^2 \tag{1}
+E ← E + P W_V E φ((E^T W_K^T W_Q E) ⊙ M) \tag{1}
 ```
+
+**Common Issues to Avoid:**
+- Don't use black squares (■) or corrupted characters in place of mathematical symbols
+- Don't omit superscripts or subscripts
+- Don't use plain text for Greek letters when symbols are available
+- Ensure all mathematical operations are clearly indicated
 
 ### Figures:
 
