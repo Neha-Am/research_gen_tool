@@ -123,8 +123,14 @@ This research was supported by the IEEE Research Grant No. 123456.
 * Number equations on the right (e.g., (1))
 * Use proper mathematical notation with clear formatting
 
-#### Mathematical Notation Guidelines:
+#### CRITICAL Mathematical Notation Guidelines (MUST FOLLOW):
 
+- **ALWAYS use the actual Unicode or LaTeX symbols for all mathematical notation (e.g., φ, θ, α, β, ⊙, ⊗, ∑, ∏, ∫, ∂, ∇, etc.), NEVER the word (e.g., do not write 'phi', always use 'φ').**
+- **If a symbol cannot be rendered, leave a clear placeholder (e.g., [MATH_SYMBOL_HERE]) and do NOT use a word description.**
+- **Never use black squares (■) or corrupted characters in place of mathematical symbols.**
+- **Never omit superscripts or subscripts.**
+- **Never use plain text for Greek letters or math symbols when Unicode or LaTeX symbols are available.**
+- **All mathematical operations must be clearly indicated and copy-paste ready for IEEE papers and PDF generation.**
 **Superscripts and Subscripts:**
 - Use proper superscript notation: `E^T` for transpose, `W_K^T` for matrix transpose
 - Use proper subscript notation: `W_V`, `W_K`, `W_Q` for different weight matrices
@@ -161,6 +167,7 @@ E ← E + P W_V E φ((E^T W_K^T W_Q E) ⊙ M) \tag{1}
 - Don't use black squares (■) or corrupted characters in place of mathematical symbols
 - Don't omit superscripts or subscripts
 - Don't use plain text for Greek letters when symbols are available
+- Don't use word descriptions for symbols (e.g., do not write "phi", always use `φ`)
 - Ensure all mathematical operations are clearly indicated
 
 ### Figures:
