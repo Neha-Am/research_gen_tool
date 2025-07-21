@@ -10,7 +10,6 @@ from io import BytesIO
 from modules.pdf_handler import PDFHandler
 from modules.content_generator import ContentGenerator
 from modules.pdf_generator import PDFGenerator
-from modules.api_tracker import APITracker
 from modules.validators import InputValidator
 from config import get_config
 
@@ -30,7 +29,6 @@ genai.configure(api_key=app.config['GOOGLE_API_KEY'])
 pdf_handler = PDFHandler(api_key=app.config['GOOGLE_API_KEY'])
 content_generator = ContentGenerator(api_key=app.config['GOOGLE_API_KEY'])
 pdf_generator = PDFGenerator()
-api_tracker = APITracker()
 input_validator = InputValidator()
 
 @app.route('/health', methods=['GET'])
@@ -80,7 +78,7 @@ def generate_paper():
     """Main endpoint to generate IEEE conference paper"""
     try:
         # Track API call
-        api_tracker.increment_call('generate_paper')
+        # api_tracker.increment_call('generate_paper')
         
         # Get request data
         data = request.get_json()
@@ -181,7 +179,7 @@ def generate_pdf():
     """Generate PDF from content"""
     try:
         # Track API call
-        api_tracker.increment_call('generate_pdf')
+        # api_tracker.increment_call('generate_pdf')
         
         data = request.get_json()
         if not data:
@@ -212,33 +210,33 @@ def generate_pdf():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@app.route('/api/stats', methods=['GET'])
-def get_api_stats():
-    """Get API usage statistics"""
-    try:
-        stats = api_tracker.get_stats()
-        return jsonify(stats)
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+# @app.route('/api/stats', methods=['GET'])
+# def get_api_stats():
+#     """Get API usage statistics"""
+#     try:
+#         stats = api_tracker.get_stats()
+#         return jsonify(stats)
+#     except Exception as e:
+#         return jsonify({'error': str(e)}), 500
 
-@app.route('/api/reset-stats', methods=['POST'])
-def reset_api_stats():
-    """Reset API usage statistics"""
-    try:
-        success = api_tracker.reset_stats()
-        if success:
-            return jsonify({'success': True, 'message': 'Statistics reset successfully'})
-        else:
-            return jsonify({'error': 'Failed to reset statistics'}), 500
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+# @app.route('/api/reset-stats', methods=['POST'])
+# def reset_api_stats():
+#     """Reset API usage statistics"""
+#     try:
+#         success = api_tracker.reset_stats()
+#         if success:
+#             return jsonify({'success': True, 'message': 'Statistics reset successfully'})
+#         else:
+#             return jsonify({'error': 'Failed to reset statistics'}), 500
+#     except Exception as e:
+#         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/validate-equations', methods=['POST'])
 def validate_equations():
     """Validate equations for proper mathematical notation"""
     try:
         # Track API call
-        api_tracker.increment_call('validate_equations')
+        # api_tracker.increment_call('validate_equations')
         
         data = request.get_json()
         if not data:
