@@ -46,81 +46,12 @@ if 'displaying_existing' not in st.session_state:
 if 'api_calls' not in st.session_state:
     st.session_state.api_calls = 0
 
-# API Call Tracking Functions
-def load_api_call_count():
-    """Load API call count from file"""
-    try:
-        if os.path.exists('../../Desktop/Flaskkk-resgen-finalversion/api_call_tracker.json'):
-            with open('../../Desktop/Flaskkk-resgen-finalversion/api_call_tracker.json', 'r') as f:
-                data = json.load(f)
-                return data.get('total_calls', 0), data.get('call_history', [])
-        return 0, []
-    except Exception as e:
-        st.error(f"Error loading API call count: {str(e)}")
-        return 0, []
-
-def save_api_call_count(total_calls, call_history):
-    """Save API call count to file"""
-    try:
-        data = {
-            'total_calls': total_calls,
-            'call_history': call_history,
-            'last_updated': datetime.now().isoformat()
-        }
-        with open('../../Desktop/Flaskkk-resgen-finalversion/api_call_tracker.json', 'w') as f:
-            json.dump(data, f, indent=2)
-    except Exception as e:
-        st.error(f"Error saving API call count: {str(e)}")
-
-def increment_api_call(function_name):
-    """Increment API call count and save to file"""
-    # Load current count
-    total_calls, call_history = load_api_call_count()
-    
-    # Increment count
-    total_calls += 1
-    st.session_state.api_calls = total_calls
-    
-    # Add to history
-    call_record = {
-        'timestamp': datetime.now().isoformat(),
-        'function': function_name,
-        'call_number': total_calls
-    }
-    call_history.append(call_record)
-    
-    # Keep only last 100 records to prevent file from growing too large
-    if len(call_history) > 100:
-        call_history = call_history[-100:]
-    
-    # Save updated count
-    save_api_call_count(total_calls, call_history)
-    
-    return total_calls
-
-def reset_api_call_count():
-    """Reset API call count to zero"""
-    try:
-        data = {
-            'total_calls': 0,
-            'call_history': [],
-            'last_updated': datetime.now().isoformat(),
-            'reset_at': datetime.now().isoformat()
-        }
-        with open('../../Desktop/Flaskkk-resgen-finalversion/api_call_tracker.json', 'w') as f:
-            json.dump(data, f, indent=2)
-        st.session_state.api_calls = 0
-        return True
-    except Exception as e:
-        st.error(f"Error resetting API call count: {str(e)}")
-        return False
-
 def read_instructions():
-    with open('../../Desktop/Flaskkk-resgen-finalversion/instructions.txt', 'r') as file:
+    with open('instructions.txt', 'r') as file:
         return file.read()
 
 def read_pdf_template():
-    with open('../../Desktop/Flaskkk-resgen-finalversion/ieee-conference-template.pdf', 'rb') as file:
+    with open('ieee-conference-template.pdf', 'rb') as file:
         pdf_reader = PyPDF2.PdfReader(file)
         text = ""
         for page in pdf_reader.pages:
@@ -778,7 +709,7 @@ def generate_paper_content(title, research_field, methodology, expected_results,
     """
     
     # Track API call
-    increment_api_call("generate_paper_content")
+    st.session_state.api_calls += 1
     
     model = genai.GenerativeModel('gemini-2.0-flash')
     response = model.generate_content(prompt)
@@ -841,7 +772,7 @@ def extract_and_analyze_pdf_content(pdf_text):
     
     try:
         # Track API call
-        increment_api_call("extract_and_analyze_pdf_content")
+        st.session_state.api_calls += 1
         
         model = genai.GenerativeModel('gemini-2.0-flash')
         response = model.generate_content(analysis_prompt)
@@ -973,9 +904,7 @@ def main():
     st.set_page_config(page_title="IEEE Conference Paper Generator", layout="wide")
     
     # Load API call count at startup
-    total_calls, call_history = load_api_call_count()
-    st.session_state.api_calls = total_calls
-    
+    total_calls = st.session_state.api_calls
     st.title("IEEE Conference Paper Content Generator")
     st.markdown("Generate professional IEEE conference paper content based on your inputs.")
     
@@ -1047,15 +976,15 @@ def main():
     with col1:
         st.metric("📊 Total API Calls", total_calls)
     with col2:
-        if call_history:
-            last_call = call_history[-1]
+        if st.session_state.call_history:
+            last_call = st.session_state.call_history[-1]
             last_call_time = datetime.fromisoformat(last_call['timestamp']).strftime("%Y-%m-%d %H:%M")
             st.metric("🕒 Last API Call", last_call_time)
         else:
             st.metric("🕒 Last API Call", "None")
     with col3:
-        if call_history:
-            today_calls = len([call for call in call_history 
+        if st.session_state.call_history:
+            today_calls = len([call for call in st.session_state.call_history 
                              if datetime.fromisoformat(call['timestamp']).date() == datetime.now().date()])
             st.metric("📅 Today's Calls", today_calls)
         else:
@@ -1087,9 +1016,9 @@ def main():
         api_details = {
             "summary": {
                 "total_calls": total_calls,
-                "today_calls": len([call for call in call_history 
-                                  if datetime.fromisoformat(call['timestamp']).date() == datetime.now().date()]) if call_history else 0,
-                "last_call_time": call_history[-1]['timestamp'] if call_history else None,
+                "today_calls": len([call for call in st.session_state.call_history 
+                                  if datetime.fromisoformat(call['timestamp']).date() == datetime.now().date()]) if st.session_state.call_history else 0,
+                "last_call_time": st.session_state.call_history[-1]['timestamp'] if st.session_state.call_history else None,
                 "last_updated": datetime.now().isoformat(),
                 "estimated_cost": {
                     "input_tokens": estimated_input_tokens,
@@ -1099,12 +1028,12 @@ def main():
                     "total_cost_usd": round(estimated_total_cost, 4)
                 }
             },
-            "call_history": call_history,
+            "call_history": st.session_state.call_history,
             "function_breakdown": {}
         }
         
         # Calculate function breakdown
-        for call in call_history:
+        for call in st.session_state.call_history:
             func_name = call['function']
             if func_name not in api_details["function_breakdown"]:
                 api_details["function_breakdown"][func_name] = 0
@@ -1122,7 +1051,7 @@ def main():
         with col2:
             # Create CSV format for easier analysis
             csv_data = "Call Number,Function,Timestamp,Date,Time\n"
-            for call in call_history:
+            for call in st.session_state.call_history:
                 call_time = datetime.fromisoformat(call['timestamp'])
                 csv_data += f"{call['call_number']},{call['function']},{call['timestamp']},{call_time.strftime('%Y-%m-%d')},{call_time.strftime('%H:%M:%S')}\n"
             
@@ -1155,7 +1084,7 @@ FUNCTION BREAKDOWN:
             
             summary_text += f"\nDETAILED HISTORY (Last 20 calls):\n"
             summary_text += "="*50 + "\n"
-            for call in call_history[-20:]:
+            for call in st.session_state.call_history[-20:]:
                 call_time = datetime.fromisoformat(call['timestamp']).strftime('%Y-%m-%d %H:%M:%S')
                 summary_text += f"#{call['call_number']} - {call['function']} - {call_time}\n"
             
@@ -1167,11 +1096,11 @@ FUNCTION BREAKDOWN:
             )
     
     # Show API call history in expander
-    if call_history:
+    if st.session_state.call_history:
         with st.expander("📈 API Call History & Analytics"):
             # Function breakdown
             function_counts = {}
-            for call in call_history:
+            for call in st.session_state.call_history:
                 func_name = call['function']
                 if func_name not in function_counts:
                     function_counts[func_name] = 0
@@ -1184,15 +1113,15 @@ FUNCTION BREAKDOWN:
                 st.text(f"{func}: {count} calls ({percentage:.1f}%)")
             
             st.markdown("### 📝 Recent Calls (Last 10)")
-            recent_calls = call_history[-10:]
+            recent_calls = st.session_state.call_history[-10:]
             for call in reversed(recent_calls):
                 call_time = datetime.fromisoformat(call['timestamp']).strftime("%Y-%m-%d %H:%M:%S")
                 st.text(f"#{call['call_number']} - {call['function']} - {call_time}")
             
             # Add download button for full history
-            if len(call_history) > 10:
+            if len(st.session_state.call_history) > 10:
                 history_text = "API Call History\n" + "="*50 + "\n"
-                for call in call_history:
+                for call in st.session_state.call_history:
                     call_time = datetime.fromisoformat(call['timestamp']).strftime("%Y-%m-%d %H:%M:%S")
                     history_text += f"#{call['call_number']} - {call['function']} - {call_time}\n"
                 
@@ -1207,9 +1136,10 @@ FUNCTION BREAKDOWN:
     col1, col2, col3 = st.columns([2, 1, 2])
     with col2:
         if st.button("🔄 Reset API Counter", key="reset_api_btn"):
-            if reset_api_call_count():
-                st.success("✅ API call counter reset successfully!")
-                st.rerun()
+            st.session_state.api_calls = 0
+            st.session_state.call_history = []
+            st.success("✅ API call counter reset successfully!")
+            st.rerun()
     
     st.markdown("---")
     
