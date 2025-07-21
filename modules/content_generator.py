@@ -41,17 +41,17 @@ class ContentGenerator:
         Follow these IEEE formatting instructions:
         {instructions}
         
-        CRITICAL MATHEMATICAL NOTATION REQUIREMENTS:
-        1. Use proper superscript notation: E^T for transpose, W_K^T for matrix transpose
-        2. Use proper subscript notation: W_V, W_K, W_Q for different weight matrices
-        3. Use proper Greek letter symbols: φ (phi), θ (theta), α (alpha), β (beta), γ (gamma), δ (delta), ε (epsilon), μ (mu), σ (sigma), λ (lambda)
-        4. Use proper mathematical symbols: ⊙ (Hadamard product), ⊗ (tensor product), ← (assignment), ∈ (element of), ∑ (summation), ∏ (product), ∫ (integral), ∂ (partial derivative), ∇ (gradient)
-        5. Use bold letters for vectors: **v**, **x**, **y**
-        6. Use capital letters for matrices: **W**, **A**, **B**
-        7. NEVER use black squares (■) or corrupted characters in place of mathematical symbols
-        8. NEVER omit superscripts or subscripts
-        9. NEVER use plain text for Greek letters when symbols are available
-        10. Ensure all mathematical operations are clearly indicated
+        # CRITICAL MATHEMATICAL NOTATION REQUIREMENTS:
+        # 1. Use proper superscript notation: E^T for transpose, W_K^T for matrix transpose
+        # 2. Use proper subscript notation: W_V, W_K, W_Q for different weight matrices
+        # 3. Use proper Greek letter symbols: φ (phi), θ (theta), α (alpha), β (beta), γ (gamma), δ (delta), ε (epsilon), μ (mu), σ (sigma), λ (lambda)
+        # 4. Use proper mathematical symbols: ⊙ (Hadamard product), ⊗ (tensor product), ← (assignment), ∈ (element of), ∑ (summation), ∏ (product), ∫ (integral), ∂ (partial derivative), ∇ (gradient)
+        # 5. Use bold letters for vectors: **v**, **x**, **y**
+        # 6. Use capital letters for matrices: **W**, **A**, **B**
+        # 7. NEVER use black squares (■) or corrupted characters in place of mathematical symbols
+        # 8. NEVER omit superscripts or subscripts
+        # 9. NEVER use plain text for Greek letters when symbols are available
+        # 10. Ensure all mathematical operations are clearly indicated
         
         Generate the content in the following sections with clear headers:
         
