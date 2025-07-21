@@ -52,6 +52,15 @@ def check_requirements():
         print(f"❌ Missing required files: {', '.join(missing_files)}")
         return False
     
+    # Check for required modules
+    try:
+        from modules.math_formatter import MathFormatter
+        from modules.content_generator import ContentGenerator
+        print("✅ Math formatting modules loaded successfully")
+    except ImportError as e:
+        print(f"❌ Math formatting module import failed: {str(e)}")
+        return False
+    
     print("✅ All requirements met!")
     return True
 
@@ -96,12 +105,12 @@ def main():
         print(f"\n💡 Press Ctrl+C to stop the server")
         print("=" * 50)
         
-        # # Run the app
-        # app.run(
-        #     host='0.0.0.0',
-        #     port=5001,
-        #     debug=config.DEBUG
-        # )
+        # Run the app
+        app.run(
+            host='0.0.0.0',
+            port=5001,
+            debug=config.DEBUG
+        )
         
     except ImportError as e:
         print(f"❌ Import error: {str(e)}")

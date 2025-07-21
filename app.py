@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, send_file
+from flask import Flask, request, jsonify, send_file, send_from_directory
 from flask_cors import CORS
 import os
 from dotenv import load_dotenv
@@ -10,7 +10,6 @@ from io import BytesIO
 from modules.pdf_handler import PDFHandler
 from modules.content_generator import ContentGenerator
 from modules.pdf_generator import PDFGenerator
-from modules.api_tracker import APITracker
 from modules.validators import InputValidator
 from config import get_config
 
@@ -18,7 +17,7 @@ from config import get_config
 load_dotenv()
 
 # Initialize Flask app
-app = Flask(__name__)
+app = Flask(__name__, static_folder='static')
 app.config.from_object(get_config())
 CORS(app, origins=app.config['CORS_ORIGINS'])
 
@@ -30,7 +29,6 @@ genai.configure(api_key=app.config['GOOGLE_API_KEY'])
 pdf_handler = PDFHandler(api_key=app.config['GOOGLE_API_KEY'])
 content_generator = ContentGenerator(api_key=app.config['GOOGLE_API_KEY'])
 pdf_generator = PDFGenerator()
-api_tracker = APITracker()
 input_validator = InputValidator()
 
 @app.route('/health', methods=['GET'])
@@ -42,12 +40,45 @@ def health_check():
         'version': '1.0.0'
     })
 
+@app.route('/docs', methods=['GET'])
+def swagger_ui():
+    """Serve Swagger UI documentation"""
+    return send_from_directory('static', 'swagger-ui.html')
+
+@app.route('/docs/swagger.json', methods=['GET'])
+def swagger_json():
+    """Serve Swagger JSON specification"""
+    return send_from_directory('static', 'swagger.json')
+
+@app.route('/api-docs', methods=['GET'])
+def api_docs_redirect():
+    """Redirect to Swagger UI"""
+    return jsonify({
+        'message': 'API Documentation',
+        'swagger_ui': '/docs',
+        'swagger_json': '/docs/swagger.json',
+        'endpoints': {
+            'health': '/health',
+            'generate_paper': '/api/generate-paper',
+            'upload_pdf': '/api/upload-pdf',
+            'generate_pdf': '/api/generate-pdf',
+            'stats': '/api/stats',
+            'reset_stats': '/api/reset-stats',
+            'validate_inputs': '/api/validate-inputs'
+        }
+    })
+
+@app.route('/', methods=['GET'])
+def index():
+    """Serve the main API documentation page"""
+    return send_from_directory('static', 'index.html')
+
 @app.route('/api/generate-paper', methods=['POST'])
 def generate_paper():
     """Main endpoint to generate IEEE conference paper"""
     try:
         # Track API call
-        api_tracker.increment_call('generate_paper')
+        # api_tracker.increment_call('generate_paper')
         
         # Get request data
         data = request.get_json()
@@ -91,12 +122,16 @@ def generate_paper():
         content_sections = content_generator.parse_generated_content(generated_content)
         content_sections['title'] = title  # Use original title
         
+        # Validate equations in the generated content
+        equation_validation = content_generator.validate_equations_in_content(generated_content)
+        
         return jsonify({
             'success': True,
             'content': generated_content,
             'sections': content_sections,
             'word_count': len(generated_content.split()),
             'character_count': len(generated_content),
+            'equation_validation': equation_validation,
             'generated_at': datetime.now().isoformat()
         })
         
@@ -130,7 +165,7 @@ def upload_pdf():
         
         return jsonify({
             'success': True,
-            'extracted_text': pdf_text[:1000] + '...' if len(pdf_text) > 1000 else pdf_text,
+            'extracted_text': pdf_text,
             'analysis': analysis_result,
             'text_length': len(pdf_text),
             'uploaded_at': datetime.now().isoformat()
@@ -144,7 +179,7 @@ def generate_pdf():
     """Generate PDF from content"""
     try:
         # Track API call
-        api_tracker.increment_call('generate_pdf')
+        # api_tracker.increment_call('generate_pdf')
         
         data = request.get_json()
         if not data:
@@ -175,24 +210,58 @@ def generate_pdf():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@app.route('/api/stats', methods=['GET'])
-def get_api_stats():
-    """Get API usage statistics"""
-    try:
-        stats = api_tracker.get_stats()
-        return jsonify(stats)
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+# @app.route('/api/stats', methods=['GET'])
+# def get_api_stats():
+#     """Get API usage statistics"""
+#     try:
+#         stats = api_tracker.get_stats()
+#         return jsonify(stats)
+#     except Exception as e:
+#         return jsonify({'error': str(e)}), 500
 
-@app.route('/api/reset-stats', methods=['POST'])
-def reset_api_stats():
-    """Reset API usage statistics"""
+# @app.route('/api/reset-stats', methods=['POST'])
+# def reset_api_stats():
+#     """Reset API usage statistics"""
+#     try:
+#         success = api_tracker.reset_stats()
+#         if success:
+#             return jsonify({'success': True, 'message': 'Statistics reset successfully'})
+#         else:
+#             return jsonify({'error': 'Failed to reset statistics'}), 500
+#     except Exception as e:
+#         return jsonify({'error': str(e)}), 500
+
+@app.route('/api/validate-equations', methods=['POST'])
+def validate_equations():
+    """Validate equations for proper mathematical notation"""
     try:
-        success = api_tracker.reset_stats()
-        if success:
-            return jsonify({'success': True, 'message': 'Statistics reset successfully'})
-        else:
-            return jsonify({'error': 'Failed to reset statistics'}), 500
+        # Track API call
+        # api_tracker.increment_call('validate_equations')
+        
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'No data provided'}), 400
+        
+        content = data.get('content', '').strip()
+        if not content:
+            return jsonify({'error': 'No content provided'}), 400
+        
+        # Validate equations in the content
+        validation_results = content_generator.validate_equations_in_content(content)
+        
+        # Format content with proper mathematical notation
+        formatted_content = content_generator.format_content_with_math(content)
+        
+        return jsonify({
+            'success': True,
+            'original_content': content,
+            'formatted_content': formatted_content,
+            'validation_results': validation_results,
+            'has_issues': len([r for r in validation_results if r['issues']]) > 0,
+            'has_warnings': len([r for r in validation_results if r['warnings']]) > 0,
+            'validated_at': datetime.now().isoformat()
+        })
+        
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 

@@ -1,5 +1,6 @@
 import google.generativeai as genai
 from datetime import datetime
+from .math_formatter import MathFormatter
 
 class ContentGenerator:
     """Handles content generation for IEEE conference papers"""
@@ -8,6 +9,7 @@ class ContentGenerator:
         if api_key:
             genai.configure(api_key=api_key)
         self.model = genai.GenerativeModel('gemini-2.0-flash')
+        self.math_formatter = MathFormatter()
     
     def generate_paper_content(self, title, research_field, methodology, expected_results, additional_context="", custom_parameters=None):
         """Generate IEEE conference paper content based on inputs"""
@@ -39,6 +41,18 @@ class ContentGenerator:
         Follow these IEEE formatting instructions:
         {instructions}
         
+        # CRITICAL MATHEMATICAL NOTATION REQUIREMENTS:
+        # 1. Use proper superscript notation: E^T for transpose, W_K^T for matrix transpose
+        # 2. Use proper subscript notation: W_V, W_K, W_Q for different weight matrices
+        # 3. Use proper Greek letter symbols: φ (phi), θ (theta), α (alpha), β (beta), γ (gamma), δ (delta), ε (epsilon), μ (mu), σ (sigma), λ (lambda)
+        # 4. Use proper mathematical symbols: ⊙ (Hadamard product), ⊗ (tensor product), ← (assignment), ∈ (element of), ∑ (summation), ∏ (product), ∫ (integral), ∂ (partial derivative), ∇ (gradient)
+        # 5. Use bold letters for vectors: **v**, **x**, **y**
+        # 6. Use capital letters for matrices: **W**, **A**, **B**
+        # 7. NEVER use black squares (■) or corrupted characters in place of mathematical symbols
+        # 8. NEVER omit superscripts or subscripts
+        # 9. NEVER use plain text for Greek letters when symbols are available
+        # 10. Ensure all mathematical operations are clearly indicated
+        
         Generate the content in the following sections with clear headers:
         
         Abstract
@@ -65,13 +79,39 @@ class ContentGenerator:
         3. The output should be a clean, professional research paper that could be directly submitted to an IEEE conference.
         4. Ensure each section has substantial content (at least 2-3 paragraphs for main sections).
         5. Make sure the content is academic, well-structured, and follows IEEE guidelines.
+        6. Pay special attention to mathematical notation - ensure all equations use proper symbols and formatting.
         """
         
         try:
             response = self.model.generate_content(prompt)
-            return response.text
+            # Format the response to ensure proper mathematical notation
+            formatted_content = self.format_content_with_math(response.text)
+            return formatted_content
         except Exception as e:
             raise Exception(f"Error generating content: {str(e)}")
+    
+    def format_content_with_math(self, content):
+        """Format content to ensure proper mathematical notation"""
+        return self.math_formatter.format_content_with_equations(content)
+    
+    def validate_equations_in_content(self, content):
+        """Validate all equations in the content for proper mathematical notation"""
+        lines = content.split('\n')
+        validation_results = []
+        
+        for i, line in enumerate(lines, 1):
+            if self.math_formatter._is_math_line(line):
+                result = self.math_formatter.validate_equation(line)
+                if result['issues'] or result['warnings']:
+                    validation_results.append({
+                        'line_number': i,
+                        'line': line,
+                        'issues': result['issues'],
+                        'warnings': result['warnings'],
+                        'formatted_line': result['formatted_equation']
+                    })
+        
+        return validation_results
     
     def parse_generated_content(self, content):
         """Parse generated content into sections"""

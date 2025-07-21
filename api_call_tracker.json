@@ -1,5 +1,5 @@
 {
-  "total_calls": 2,
+  "total_calls": 57,
   "call_history": [
     {
       "timestamp": "2025-07-04T18:30:37.813866",
@@ -10,7 +10,282 @@
       "timestamp": "2025-07-04T18:30:48.896875",
       "function": "generate_pdf",
       "call_number": 2
+    },
+    {
+      "timestamp": "2025-07-08T20:20:17.258652",
+      "function": "generate_paper",
+      "call_number": 3
+    },
+    {
+      "timestamp": "2025-07-08T20:20:37.872895",
+      "function": "generate_paper",
+      "call_number": 4
+    },
+    {
+      "timestamp": "2025-07-08T20:24:05.326778",
+      "function": "upload_pdf",
+      "call_number": 5
+    },
+    {
+      "timestamp": "2025-07-08T20:25:18.315141",
+      "function": "upload_pdf",
+      "call_number": 6
+    },
+    {
+      "timestamp": "2025-07-08T20:25:25.424900",
+      "function": "upload_pdf",
+      "call_number": 7
+    },
+    {
+      "timestamp": "2025-07-08T20:25:29.031502",
+      "function": "upload_pdf",
+      "call_number": 8
+    },
+    {
+      "timestamp": "2025-07-08T20:30:57.260410",
+      "function": "generate_paper",
+      "call_number": 9
+    },
+    {
+      "timestamp": "2025-07-09T16:59:10.920075",
+      "function": "generate_paper",
+      "call_number": 10
+    },
+    {
+      "timestamp": "2025-07-09T17:00:03.059938",
+      "function": "upload_pdf",
+      "call_number": 11
+    },
+    {
+      "timestamp": "2025-07-09T17:00:40.552448",
+      "function": "generate_pdf",
+      "call_number": 12
+    },
+    {
+      "timestamp": "2025-07-09T18:15:56.721570",
+      "function": "generate_paper",
+      "call_number": 13
+    },
+    {
+      "timestamp": "2025-07-09T18:27:53.149621",
+      "function": "upload_pdf",
+      "call_number": 14
+    },
+    {
+      "timestamp": "2025-07-15T18:10:57.014539",
+      "function": "upload_pdf",
+      "call_number": 15
+    },
+    {
+      "timestamp": "2025-07-15T18:11:02.473367",
+      "function": "generate_pdf",
+      "call_number": 16
+    },
+    {
+      "timestamp": "2025-07-15T18:11:48.681985",
+      "function": "generate_paper",
+      "call_number": 17
+    },
+    {
+      "timestamp": "2025-07-15T18:22:38.517497",
+      "function": "extract_and_analyze_pdf_content",
+      "call_number": 18
+    },
+    {
+      "timestamp": "2025-07-15T18:23:31.485220",
+      "function": "extract_and_analyze_pdf_content",
+      "call_number": 19
+    },
+    {
+      "timestamp": "2025-07-15T18:23:45.341215",
+      "function": "extract_and_analyze_pdf_content",
+      "call_number": 20
+    },
+    {
+      "timestamp": "2025-07-15T18:23:49.332682",
+      "function": "extract_and_analyze_pdf_content",
+      "call_number": 21
+    },
+    {
+      "timestamp": "2025-07-15T18:23:53.212756",
+      "function": "extract_and_analyze_pdf_content",
+      "call_number": 22
+    },
+    {
+      "timestamp": "2025-07-15T18:24:52.433324",
+      "function": "extract_and_analyze_pdf_content",
+      "call_number": 23
+    },
+    {
+      "timestamp": "2025-07-15T18:24:54.292522",
+      "function": "generate_paper_content",
+      "call_number": 24
+    },
+    {
+      "timestamp": "2025-07-15T18:25:38.745101",
+      "function": "extract_and_analyze_pdf_content",
+      "call_number": 25
+    },
+    {
+      "timestamp": "2025-07-15T18:27:44.191060",
+      "function": "extract_and_analyze_pdf_content",
+      "call_number": 26
+    },
+    {
+      "timestamp": "2025-07-15T18:27:46.834340",
+      "function": "extract_and_analyze_pdf_content",
+      "call_number": 27
+    },
+    {
+      "timestamp": "2025-07-16T19:08:10.234446",
+      "function": "extract_and_analyze_pdf_content",
+      "call_number": 28
+    },
+    {
+      "timestamp": "2025-07-16T19:08:30.101349",
+      "function": "extract_and_analyze_pdf_content",
+      "call_number": 29
+    },
+    {
+      "timestamp": "2025-07-16T19:08:41.749354",
+      "function": "extract_and_analyze_pdf_content",
+      "call_number": 30
+    },
+    {
+      "timestamp": "2025-07-16T19:08:45.300375",
+      "function": "generate_paper_content",
+      "call_number": 31
+    },
+    {
+      "timestamp": "2025-07-16T19:21:00.830153",
+      "function": "extract_and_analyze_pdf_content",
+      "call_number": 32
+    },
+    {
+      "timestamp": "2025-07-17T10:40:24.070606",
+      "function": "extract_and_analyze_pdf_content",
+      "call_number": 33
+    },
+    {
+      "timestamp": "2025-07-17T10:40:31.636651",
+      "function": "extract_and_analyze_pdf_content",
+      "call_number": 34
+    },
+    {
+      "timestamp": "2025-07-17T10:40:34.485399",
+      "function": "generate_paper_content",
+      "call_number": 35
+    },
+    {
+      "timestamp": "2025-07-17T10:44:52.369722",
+      "function": "extract_and_analyze_pdf_content",
+      "call_number": 36
+    },
+    {
+      "timestamp": "2025-07-18T09:15:55.912816",
+      "function": "extract_and_analyze_pdf_content",
+      "call_number": 37
+    },
+    {
+      "timestamp": "2025-07-18T09:16:10.901526",
+      "function": "extract_and_analyze_pdf_content",
+      "call_number": 38
+    },
+    {
+      "timestamp": "2025-07-18T09:16:12.836983",
+      "function": "generate_paper_content",
+      "call_number": 39
+    },
+    {
+      "timestamp": "2025-07-18T09:17:31.362777",
+      "function": "extract_and_analyze_pdf_content",
+      "call_number": 40
+    },
+    {
+      "timestamp": "2025-07-18T09:23:59.334906",
+      "function": "extract_and_analyze_pdf_content",
+      "call_number": 41
+    },
+    {
+      "timestamp": "2025-07-18T09:24:06.357625",
+      "function": "extract_and_analyze_pdf_content",
+      "call_number": 42
+    },
+    {
+      "timestamp": "2025-07-18T09:24:08.073763",
+      "function": "generate_paper_content",
+      "call_number": 43
+    },
+    {
+      "timestamp": "2025-07-18T09:24:35.947414",
+      "function": "extract_and_analyze_pdf_content",
+      "call_number": 44
+    },
+    {
+      "timestamp": "2025-07-18T09:30:23.473349",
+      "function": "extract_and_analyze_pdf_content",
+      "call_number": 45
+    },
+    {
+      "timestamp": "2025-07-18T09:30:31.285760",
+      "function": "extract_and_analyze_pdf_content",
+      "call_number": 46
+    },
+    {
+      "timestamp": "2025-07-18T09:30:34.331004",
+      "function": "generate_paper_content",
+      "call_number": 47
+    },
+    {
+      "timestamp": "2025-07-18T09:31:02.002199",
+      "function": "extract_and_analyze_pdf_content",
+      "call_number": 48
+    },
+    {
+      "timestamp": "2025-07-18T11:10:41.144596",
+      "function": "extract_and_analyze_pdf_content",
+      "call_number": 49
+    },
+    {
+      "timestamp": "2025-07-18T11:11:02.313021",
+      "function": "extract_and_analyze_pdf_content",
+      "call_number": 50
+    },
+    {
+      "timestamp": "2025-07-18T11:11:05.122761",
+      "function": "generate_paper_content",
+      "call_number": 51
+    },
+    {
+      "timestamp": "2025-07-18T11:11:31.713668",
+      "function": "extract_and_analyze_pdf_content",
+      "call_number": 52
+    },
+    {
+      "timestamp": "2025-07-18T11:11:39.376489",
+      "function": "extract_and_analyze_pdf_content",
+      "call_number": 53
+    },
+    {
+      "timestamp": "2025-07-18T11:11:41.512744",
+      "function": "generate_paper_content",
+      "call_number": 54
+    },
+    {
+      "timestamp": "2025-07-18T11:12:15.026910",
+      "function": "extract_and_analyze_pdf_content",
+      "call_number": 55
+    },
+    {
+      "timestamp": "2025-07-18T11:12:18.229483",
+      "function": "generate_paper_content",
+      "call_number": 56
+    },
+    {
+      "timestamp": "2025-07-18T11:12:53.211770",
+      "function": "extract_and_analyze_pdf_content",
+      "call_number": 57
     }
   ],
-  "last_updated": "2025-07-04T18:30:48.896891"
+  "last_updated": "2025-07-18T11:12:53.211785"
 }
